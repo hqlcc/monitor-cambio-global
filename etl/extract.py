@@ -5,13 +5,6 @@ from datetime import datetime, timedelta
 
 MOEDAS = ["USD", "EUR", "GBP", "JPY", "ARS"]
 
-CRIPTOS = {
-    "BTC": "bitcoin",
-    "ETH": "ethereum",
-    "SOL": "solana",
-    "BNB": "binancecoin"
-}
-
 
 def extract_bcb():
     end_date = datetime.today()
@@ -39,57 +32,45 @@ def extract_bcb():
                 "data": item["dataHoraCotacao"][:10],
                 "codigo_ativo": moeda,
                 "fonte": "BCB",
-                "valor_em_brl": item["cotacaoVenda"],
-                "valor_em_usd": None
+                "valor": item["cotacaoVenda"]
             })
 
     return pd.DataFrame(rows)
 
 
-def extract_coingecko():
-    import time
+def extract_frankfurter():
+    end_date = datetime.today().date()
+    start_date = end_date - timedelta(days=30)
+
+    moedas = "USD,GBP,JPY,ARS,BRL"
+
+    url = (
+        f"https://api.frankfurter.app/{start_date}..{end_date}"
+        f"?from=EUR&to={moedas}"
+    )
+
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+
+    data = response.json()
+    rates = data.get("rates", {})
 
     rows = []
 
-    headers = {
-        "accept": "application/json",
-        "User-Agent": "monitor-investimentos-global"
-    }
-
-    for codigo, coin_id in CRIPTOS.items():
-        url = (
-            f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
-            "?vs_currency=usd&days=30&interval=daily"
-        )
-
-        response = requests.get(url, headers=headers, timeout=30)
-
-        if response.status_code != 200:
-            raise Exception(
-                f"Erro na CoinGecko para {codigo}: "
-                f"status={response.status_code}, resposta={response.text}"
-            )
-
-        data = response.json()
-        prices = data.get("prices", [])
-
-        if not prices:
-            raise Exception(f"CoinGecko não retornou preços para {codigo}")
-
-        for item in prices:
-            timestamp_ms = item[0]
-            price_usd = item[1]
-
-            data_cotacao = datetime.utcfromtimestamp(timestamp_ms / 1000).date()
-
+    for data_cotacao, valores in rates.items():
+        for moeda, valor in valores.items():
             rows.append({
-                "data": str(data_cotacao),
-                "codigo_ativo": codigo,
-                "fonte": "COINGECKO",
-                "valor_em_brl": None,
-                "valor_em_usd": price_usd
+                "data": data_cotacao,
+                "codigo_ativo": moeda,
+                "fonte": "FRANKFURTER",
+                "valor": valor
             })
 
-        time.sleep(3)
+        rows.append({
+            "data": data_cotacao,
+            "codigo_ativo": "EUR",
+            "fonte": "FRANKFURTER",
+            "valor": 1.0
+        })
 
     return pd.DataFrame(rows)

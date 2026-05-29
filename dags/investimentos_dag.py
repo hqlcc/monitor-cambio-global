@@ -5,7 +5,7 @@ import sys
 
 sys.path.append("/opt/airflow")
 
-from etl.extract import extract_bcb, extract_coingecko
+from etl.extract import extract_bcb, extract_frankfurter
 from etl.transform import transform_data, create_dim_ativo, create_dim_data
 from etl.validate import validate_data
 from etl.load import load_dimensions, load_facts
@@ -13,8 +13,8 @@ from etl.load import load_dimensions, load_facts
 
 default_args = {
     "owner": "grupo-investimentos",
-    "retries": 2,
-    "retry_delay": timedelta(minutes=2)
+    "retries": 1,
+    "retry_delay": timedelta(minutes=1)
 }
 
 
@@ -23,23 +23,30 @@ def task_extract_bcb(**context):
     context["ti"].xcom_push(key="df_bcb", value=df_bcb.to_json())
 
 
-def task_extract_coingecko(**context):
-    df_coingecko = extract_coingecko()
-    context["ti"].xcom_push(key="df_coingecko", value=df_coingecko.to_json())
+def task_extract_frankfurter(**context):
+    df_frankfurter = extract_frankfurter()
+    context["ti"].xcom_push(
+        key="df_frankfurter",
+        value=df_frankfurter.to_json()
+    )
 
 
 def task_transform(**context):
     import pandas as pd
+    from io import StringIO
 
     df_bcb_json = context["ti"].xcom_pull(key="df_bcb")
-    df_coingecko_json = context["ti"].xcom_pull(key="df_coingecko")
+    df_frankfurter_json = context["ti"].xcom_pull(key="df_frankfurter")
 
-    df_bcb = pd.read_json(df_bcb_json)
-    df_coingecko = pd.read_json(df_coingecko_json)
+    df_bcb = pd.read_json(StringIO(df_bcb_json))
+    df_frankfurter = pd.read_json(StringIO(df_frankfurter_json))
 
-    df_final = transform_data(df_bcb, df_coingecko)
+    df_final = transform_data(df_bcb, df_frankfurter)
     df_ativo = create_dim_ativo(df_final)
     df_data = create_dim_data(df_final)
+
+    df_final["data"] = df_final["data"].astype(str)
+    df_data["data"] = df_data["data"].astype(str)
 
     context["ti"].xcom_push(key="df_final", value=df_final.to_json())
     context["ti"].xcom_push(key="df_ativo", value=df_ativo.to_json())
@@ -48,19 +55,24 @@ def task_transform(**context):
 
 def task_validate(**context):
     import pandas as pd
+    from io import StringIO
 
     df_final_json = context["ti"].xcom_pull(key="df_final")
-    df_final = pd.read_json(df_final_json)
+    df_final = pd.read_json(StringIO(df_final_json))
 
     validate_data(df_final)
 
 
 def task_load(**context):
     import pandas as pd
+    from io import StringIO
 
-    df_final = pd.read_json(context["ti"].xcom_pull(key="df_final"))
-    df_ativo = pd.read_json(context["ti"].xcom_pull(key="df_ativo"))
-    df_data = pd.read_json(context["ti"].xcom_pull(key="df_data"))
+    df_final = pd.read_json(StringIO(context["ti"].xcom_pull(key="df_final")))
+    df_ativo = pd.read_json(StringIO(context["ti"].xcom_pull(key="df_ativo")))
+    df_data = pd.read_json(StringIO(context["ti"].xcom_pull(key="df_data")))
+
+    df_final["data"] = pd.to_datetime(df_final["data"]).dt.date
+    df_data["data"] = pd.to_datetime(df_data["data"]).dt.date
 
     load_dimensions(df_ativo, df_data)
     load_facts(df_final)
@@ -72,7 +84,7 @@ with DAG(
     start_date=datetime(2026, 1, 1),
     schedule_interval="@daily",
     catchup=False,
-    tags=["investimentos", "cambio", "cripto", "etl"]
+    tags=["cambio", "etl", "investimentos"]
 ) as dag:
 
     extract_bcb_task = PythonOperator(
@@ -80,9 +92,9 @@ with DAG(
         python_callable=task_extract_bcb
     )
 
-    extract_coingecko_task = PythonOperator(
-        task_id="extract_coingecko",
-        python_callable=task_extract_coingecko
+    extract_frankfurter_task = PythonOperator(
+        task_id="extract_frankfurter",
+        python_callable=task_extract_frankfurter
     )
 
     transform_task = PythonOperator(
@@ -100,4 +112,4 @@ with DAG(
         python_callable=task_load
     )
 
-    [extract_bcb_task, extract_coingecko_task] >> transform_task >> validate_task >> load_task
+    [extract_bcb_task, extract_frankfurter_task] >> transform_task >> validate_task >> load_task

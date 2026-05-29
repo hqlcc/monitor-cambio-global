@@ -70,8 +70,7 @@ def load_facts(df):
                     data_id,
                     ativo_id,
                     fonte,
-                    valor_em_brl,
-                    valor_em_usd,
+                    valor,
                     variacao_diaria,
                     retorno_acumulado,
                     volatilidade_7d
@@ -80,16 +79,14 @@ def load_facts(df):
                     :data_id,
                     :ativo_id,
                     :fonte,
-                    :valor_em_brl,
-                    :valor_em_usd,
+                    :valor,
                     :variacao_diaria,
                     :retorno_acumulado,
                     :volatilidade_7d
                 )
                 ON CONFLICT (data_id, ativo_id, fonte)
                 DO UPDATE SET
-                    valor_em_brl = EXCLUDED.valor_em_brl,
-                    valor_em_usd = EXCLUDED.valor_em_usd,
+                    valor = EXCLUDED.valor,
                     variacao_diaria = EXCLUDED.variacao_diaria,
                     retorno_acumulado = EXCLUDED.retorno_acumulado,
                     volatilidade_7d = EXCLUDED.volatilidade_7d,
@@ -98,8 +95,7 @@ def load_facts(df):
                 "data_id": ids.data_id,
                 "ativo_id": ids.ativo_id,
                 "fonte": row["fonte"],
-                "valor_em_brl": none_if_nan(row["valor_em_brl"]),
-                "valor_em_usd": none_if_nan(row["valor_em_usd"]),
+                "valor": none_if_nan(row["valor"]),
                 "variacao_diaria": none_if_nan(row["variacao_diaria"]),
                 "retorno_acumulado": none_if_nan(row["retorno_acumulado"]),
                 "volatilidade_7d": none_if_nan(row["volatilidade_7d"])
