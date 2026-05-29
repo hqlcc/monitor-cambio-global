@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: investimentos_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: investimentos
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    image: apache/airflow:2.8.4
+    container_name: investimentos_airflow_webserver
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/investimentos
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./etl:/opt/airflow/etl
+      - ./sql:/opt/airflow/sql
+      - ./.env:/opt/airflow/.env
+    command: >
+      bash -c "pip install -r /opt/airflow/sql/../requirements.txt || true;
+               airflow db migrate;
+               airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@email.com || true;
+               airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.4
+    container_name: investimentos_airflow_scheduler
+    depends_on:
+      - airflow-webserver
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/investimentos
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./etl:/opt/airflow/etl
+      - ./sql:/opt/airflow/sql
+      - ./.env:/opt/airflow/.env
+    command: >
+      bash -c "pip install -r /opt/airflow/sql/../requirements.txt || true;
+               airflow scheduler"
+
+volumes:
+  postgres_data:
