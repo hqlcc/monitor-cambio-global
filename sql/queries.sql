@@ -1,4 +1,4 @@
--- 1. Ranking de retorno acumulado
+-- Ranking de retorno acumulado
 SELECT
     a.codigo,
     a.nome,
@@ -10,7 +10,7 @@ GROUP BY a.codigo, a.nome, f.fonte
 ORDER BY retorno_percentual DESC;
 
 
--- 2. Moedas mais voláteis
+-- Moedas mais voláteis
 SELECT
     a.codigo,
     a.nome,
@@ -23,7 +23,7 @@ GROUP BY a.codigo, a.nome, f.fonte
 ORDER BY volatilidade_media_percentual DESC;
 
 
--- 3. Melhor relação retorno-risco
+-- Melhor relação retorno-risco
 SELECT
     a.codigo,
     a.nome,
@@ -39,7 +39,7 @@ GROUP BY a.codigo, a.nome, f.fonte
 ORDER BY score_retorno_risco DESC;
 
 
--- 4. Série histórica
+-- Série histórica
 SELECT
     d.data,
     a.codigo,
