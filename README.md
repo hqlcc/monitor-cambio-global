@@ -1,6 +1,6 @@
-# 🌎 Monitor de Câmbio Global — Melhor Moeda para Investir
+# Monitor de Câmbio Global — Melhor Moeda para Investir
 
-## 📖 Sobre o Projeto
+## Sobre o Projeto
 
 O **Monitor de Câmbio Global** é um projeto de Engenharia de Dados desenvolvido para coletar, processar e analisar cotações de moedas internacionais através de um pipeline ETL automatizado.
 
@@ -8,7 +8,7 @@ O sistema utiliza dados provenientes do **Banco Central do Brasil (PTAX)** e da 
 
 ---
 
-## 🎯 Objetivo
+## Objetivo
 
 Identificar quais moedas apresentaram melhor desempenho no período analisado, considerando indicadores de:
 
@@ -18,7 +18,7 @@ Identificar quais moedas apresentaram melhor desempenho no período analisado, c
 
 ---
 
-## 🏗 Arquitetura
+## Arquitetura
 
 ```text
 Banco Central (PTAX) ─┐
@@ -44,7 +44,7 @@ Frankfurter API ──────┘
 
 ---
 
-## ⚙️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Linguagens
 
@@ -71,7 +71,7 @@ Frankfurter API ──────┘
 
 ---
 
-## 📊 Modelo Dimensional
+## Modelo Dimensional
 
 ### Dimensão Ativo
 
@@ -111,7 +111,7 @@ Frankfurter API ──────┘
 
 ---
 
-## 🔄 Pipeline ETL
+## Pipeline ETL
 
 ### Extract
 
@@ -149,7 +149,7 @@ Carga incremental para:
 
 ---
 
-## 🚀 Como Executar
+## Como Executar
 
 ### Clonar o repositório
 
@@ -190,7 +190,7 @@ monitor_investimentos_global
 
 ---
 
-## 📈 Consultas Analíticas
+## Consultas Analíticas
 
 ### Melhor retorno acumulado
 
@@ -223,7 +223,7 @@ ORDER BY volatilidade_media DESC;
 
 ---
 
-## 📊 Resultados Obtidos
+## Resultados Obtidos
 
 Durante os testes foram processados:
 
@@ -249,6 +249,6 @@ Durante os testes foram processados:
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto foi desenvolvido para fins acadêmicos na disciplina de Integração de Dados.
